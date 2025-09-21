@@ -15,8 +15,8 @@ dotenv.load_dotenv()
 
 qb_host = str(getenv("QB_HOST", "http://127.0.0.1"))
 qb_port = int(getenv("QB_PORT", 8080))
-qb_username = str(getenv("QB_USERNAME", ""))
-qb_passwd = str(getenv("QB_PASSWD", ""))
+qb_username = str(getenv("QB_USERNAME", "admin"))
+qb_passwd = str(getenv("QB_PASSWD", "admin"))
 qb_backup_path = str(expandvars(getenv("QB_BACKUP_PATH", r"%LOCALAPPDATA%\qBittorrent\BT_backup")))
 
 
@@ -55,7 +55,10 @@ if __name__ == '__main__':
     torrents = qbt_client.torrents.info()
     Avalon.info(f"读取到的种子数为：{len(torrents)}, 开始处理...")
 
-    checking_torrents = [torrent for torrent in torrents if torrent['state'] in ["checkingDL", "checkingUP"]]
+    # # 打印所有种子的状态，便于排查
+    # for torrent in torrents:
+    #     Avalon.info(f"种子：{torrent['name']}，状态：{torrent['state']}")
+    checking_torrents = [torrent for torrent in torrents if torrent['state'] in ["checkingDL", "checkingUP", "checkingResumeData"]]
     Avalon.info(f"正在校验的种子数为：{len(checking_torrents)}")
 
     # BACKUP 旧版 API
@@ -81,6 +84,7 @@ if __name__ == '__main__':
         res = qbt_client.torrents_add(
             torrent_files=f"./temp/{torrent_filename}",
             save_path=str(torrent['save_path']),
+            # save_path=str(torrent['save_path']).replace('/path/a', '/path/b'),     # 添加替换路径功能
             is_skip_checking=True,
             category=torrent['category'],
             tags=torrent['tags'],
